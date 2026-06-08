@@ -1,12 +1,18 @@
 from django.contrib import admin
-from .models import Respuesta
+from .models import Pregunta, Respuesta, CodigoQR
 
-@admin.register(Respuesta)
+class PreguntaAdmin(admin.ModelAdmin):
+    list_display = ['texto', 'activa', 'orden', 'creada']
+    list_editable = ['activa', 'orden']
+
 class RespuestaAdmin(admin.ModelAdmin):
-    list_display = ['fecha', 'comida', 'servicio', 'ambiente', 'comentario_corto']
-    list_filter = ['comida', 'servicio', 'ambiente']
-    readonly_fields = ['fecha']
-    
-    def comentario_corto(self, obj):
-        return obj.comentario[:50] if obj.comentario else '-'
-    comentario_corto.short_description = 'Comentario'
+    list_display = ['pregunta', 'valor_estrella', 'fecha']
+    list_filter = ['fecha']
+
+class CodigoQRAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'codigo', 'activo', 'fecha_creacion']
+    list_editable = ['activo']
+
+admin.site.register(Pregunta, PreguntaAdmin)
+admin.site.register(Respuesta, RespuestaAdmin)
+admin.site.register(CodigoQR, CodigoQRAdmin)

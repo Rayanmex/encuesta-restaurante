@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Resultados de Encuestas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f0f2f5; padding: 20px; }
+        .header { background: #ff6b00; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .barra { background: #e9ecef; border-radius: 10px; overflow: hidden; margin: 5px 0; }
+        .barra-fill { background: #ff6b00; color: white; padding: 5px; text-align: right; padding-right: 10px; }
+        .btn { background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Resultados de Encuestas</h1>
+        <a href="{% url 'dashboard' %}" class="btn">← Volver al Dashboard</a>
+    </div>
+    
+    {% for pregunta in preguntas %}
+    <div class="card">
+        <h3>{{ pregunta.texto }}</h3>
+        {% with res=resultados|get_item:pregunta.id %}
+            {% if pregunta.tipo == 'estrella' %}
+                <p><strong>Promedio:</strong> ⭐ {{ res.promedio }}/5</p>
+                <p><strong>Total respuestas:</strong> {{ res.total }}</p>
+                {% for estrella in "12345"|make_list %}
+                    <div class="barra">
+                        <div class="barra-fill" style="width: {% widthratio res.distribucion|get_item:estrella res.total 100 %}%;">
+                            {{ estrella }}★: {{ res.distribucion|get_item:estrella }}
+                        </div>
+                    </div>
+                {% endfor %}
+                
+            {% elif pregunta.tipo == 'si_no' %}
+                <p><strong>✅ Sí:</strong> {{ res.si }}</p>
+                <p><strong>❌ No:</strong> {{ res.no }}</p>
+                <p><strong>Total:</strong> {{ res.total }}</p>
+                <div class="barra">
+                    <div class="barra-fill" style="width: {% widthratio res.si res.total 100 %}%; background: #28a745;">
+                        Sí: {{ res.si }}
+                    </div>
+                </div>
+                
+            {% elif pregunta.tipo == 'texto' %}
+                <p><strong>Total respuestas:</strong> {{ res.total }}</p>
+                <ul>
+                    {% for texto in res.textos %}
+                        <li>"{{ texto }}"</li>
+                    {% empty %}
+                        <li>No hay respuestas de texto aún.</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+    {% empty %}
+    <p>No hay preguntas creadas aún.</p>
+    {% endfor %}
+</body>
+</html>

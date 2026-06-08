@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Chiwu Banderillas Coreanas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fb;
+            color: #1e293b;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 24px;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .logo h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .logo p {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .nav-section {
+            margin-bottom: 24px;
+        }
+        
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 12px;
+            padding-left: 12px;
+        }
+        
+        .nav-item {
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-item.active {
+            background: rgba(255,107,0,0.2);
+            border-left: 3px solid #ff6b00;
+        }
+        
+        /* Main content */
+        .main-content {
+            margin-left: 280px;
+            padding: 32px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ff6b00;
+        }
+        
+        /* Filtros */
+        .filtros-container {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .filtros-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+        
+        .filtros-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+        
+        .filtro-item {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filtro-item label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        
+        .filtro-item input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .btn-filtrar {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-filtrar:hover {
+            background: #e55a00;
+        }
+        
+        .btn-limpiar {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-limpiar:hover {
+            background: #475569;
+        }
+        
+        /* Charts */
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .chart-container h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        canvas {
+            max-height: 300px;
+        }
+        
+        /* QR Manager */
+        .qr-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .qr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        /* Preguntas Section */
+        .preguntas-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .preguntas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .preguntas-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        .preguntas-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .preguntas-table th,
+        .preguntas-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .preguntas-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .estado-activo {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .estado-inactivo {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0 4px;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #1e293b;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #ff6b00;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #e55a00;
+            transform: scale(1.02);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .qr-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .qr-code canvas {
+            max-width: 150px;
+            margin: 0 auto;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        .modal-content textarea {
+            resize: vertical;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .form-check input {
+            width: auto;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .filtros-group {
+                flex-direction: column;
+            }
+            .filtro-item {
+                width: 100%;
+            }
+        }
+        
+        .seccion {
+            display: none;
+        }
+        
+        .seccion.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        {% load static %}
+        <div class="logo">
+            <img src="{% static 'logo.png' %}" alt="Chiwu" style="width: 120px; height: 80px; object-fit: contain; margin-bottom: 15px;">
+            
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <div class="nav-item active" data-seccion="dashboard">
+                <span>📊</span> Dashboard
+            </div>
+            <div class="nav-item" data-seccion="preguntas">
+                <span>📝</span> Gestión de Preguntas
+            </div>
+            <div class="nav-item" data-seccion="qr">
+                <span>📱</span> Códigos QR
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Encuesta</div>
+            <div class="nav-item" onclick="window.location.href='/'">
+                <span>🔗</span> Ver Encuesta
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="header">
+            <h1 id="titulo-seccion">Dashboard de Satisfacción</h1>
+            <div class="user-info">
+                <span>👤 {{ user.username }}</span>
+                <form action="{% url 'logout' %}" method="post" style="display: inline; margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 14px; font-weight: 500;">
+                        🚪 Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sección Dashboard -->
+        <div id="seccion-dashboard" class="seccion active">
+            <!-- Filtros de fecha -->
+            <div class="filtros-container">
+                <div class="filtros-title">📅 Filtrar por fecha</div>
+                <div class="filtros-group">
+                    <div class="filtro-item">
+                        <label>Desde</label>
+                        <input type="date" id="fecha_desde" value="{{ fecha_desde|default:'' }}">
+                    </div>
+                    <div class="filtro-item">
+                        <label>Hasta</label>
+                        <input type="date" id="fecha_hasta" value="{{ fecha_hasta|default:'' }}">
+                    </div>
+                    <div class="filtro-item">
+                        <label>&nbsp;</label>
+                        <button class="btn-filtrar" onclick="aplicarFiltros()">🔍 Aplicar Filtro</button>
+                    </div>
+                    <div class="filtro-item">
+                        <label>&nbsp;</label>
+                        <button class="btn-limpiar" onclick="limpiarFiltros()">🗑️ Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <h3>📝 Total de Respuestas</h3>
+                    <div class="stat-number" id="total_respuestas">{{ total_respuestas }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>📊 Respuestas en período</h3>
+                    <div class="stat-number" id="respuestas_periodo">{{ respuestas_periodo|default:total_respuestas }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>⭐ Promedio General</h3>
+                    <div class="stat-number" id="promedio_general">{{ promedio_general|default:promedio_hoy }}/5</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h3>📈 Evolución de Respuestas</h3>
+                <canvas id="trendChart"></canvas>
+            </div>
+            
+            <div id="charts-preguntas">
+                {% for stat in stats_preguntas %}
+                <div class="chart-container">
+                    <h3>⭐ {{ stat.pregunta.texto }}</h3>
+                    <p>Total: {{ stat.total }} respuestas | Promedio: {{ stat.promedio }}/5</p>
+                    <canvas id="chart_{{ forloop.counter }}"></canvas>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Sección Gestión de Preguntas -->
+        <div id="seccion-preguntas" class="seccion">
+            <div class="preguntas-section">
+                <div class="preguntas-header">
+                    <h2>📝 Preguntas de la Encuesta</h2>
+                    <button class="btn btn-primary" onclick="abrirModalPregunta()">+ Nueva Pregunta</button>
+                </div>
+                <div class="preguntas-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Orden</th>
+                                <th>Pregunta</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-preguntas">
+                            {% for pregunta in preguntas %}
+                            <tr id="pregunta-row-{{ pregunta.id }}">
+                                <td>{{ pregunta.orden }}</td>
+                                <td>{{ pregunta.texto }}</td>
+                                <td>⭐ Estrellas</td>
+                                <td class="{% if pregunta.activa %}estado-activo{% else %}estado-inactivo{% endif %}">
+                                    {% if pregunta.activa %}Activa{% else %}Inactiva{% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-small btn-warning" onclick="editarPregunta({{ pregunta.id }})">✏️</button>
+                                    <button class="btn btn-small btn-danger" onclick="eliminarPregunta({{ pregunta.id }})">🗑️</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No hay preguntas creadas. ¡Crea una!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección Códigos QR -->
+        <div id="seccion-qr" class="seccion">
+            <div class="qr-section">
+                <div class="qr-header">
+                    <h2>📱 Códigos QR Activos</h2>
+                    <button class="btn btn-primary" onclick="abrirModalQR()">+ Generar Nuevo QR</button>
+                </div>
+                <div class="qr-grid" id="qrGrid">
+                    {% for qr in codigos_qr %}
+                    <div class="qr-card" data-id="{{ qr.id }}">
+                        <h4>{{ qr.nombre }}</h4>
+                        <div class="qr-code" id="qr-{{ qr.id }}"></div>
+                        <p style="font-size:11px; color:#999; word-break:break-all; margin-top:10px;">
+                            URL: http://127.0.0.1:8000{% url 'encuesta_qr' qr.codigo %}
+                        </p>
+                        <button class="btn btn-danger" style="margin-top:10px; width:100%;" onclick="eliminarQR({{ qr.id }})">
+                            Eliminar
+                        </button>
+                    </div>
+                    {% empty %}
+                    <p>No hay códigos QR generados. ¡Crea uno!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para crear/editar pregunta -->
+    <div id="modalPregunta" class="modal">
+        <div class="modal-content">
+            <h2 id="modalPreguntaTitulo">Nueva Pregunta</h2>
+            <form id="formPregunta">
+                <input type="hidden" id="preguntaId" value="">
+                <label>Texto de la pregunta</label>
+                <textarea id="preguntaTexto" rows="3" required placeholder="Escribe la pregunta..."></textarea>
+                
+                <label>Orden de aparición</label>
+                <input type="number" id="preguntaOrden" value="0" placeholder="Número más pequeño = aparece primero">
+                
+                <div class="form-check">
+                    <input type="checkbox" id="preguntaActiva" checked>
+                    <label>¿Pregunta activa?</label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn" onclick="cerrarModalPregunta()" style="background:#ccc;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para generar QR -->
+    <div id="modalQR" class="modal">
+        <div class="modal-content">
+            <h2>Generar Código QR</h2>
+            <p style="color:#666; margin-bottom:15px;">El QR apuntará a la encuesta de satisfacción</p>
+            <form id="formQR">
+                <label>Nombre del QR (ej: Mesa 1, Promoción, Publicidad)</label>
+                <input type="text" id="qrNombre" required placeholder="Ej: Mesa 1" autocomplete="off">
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" id="btnGenerarQR">Generar QR</button>
+                    <button type="button" class="btn" onclick="cerrarModalQR()" style="background:#ccc;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        // Variables globales
+        let trendChart = null;
+        let preguntaCharts = {};
+        
+        // Función para obtener CSRF token
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
+        }
+        
+        // ==================== FILTROS Y ESTADÍSTICAS ====================
+        function aplicarFiltros() {
+            const fechaDesde = document.getElementById('fecha_desde').value;
+            const fechaHasta = document.getElementById('fecha_hasta').value;
+            
+            fetch(`/estadisticas-filtradas/?desde=${fechaDesde}&hasta=${fechaHasta}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Actualizar estadísticas
+                        document.getElementById('total_respuestas').textContent = data.total_respuestas;
+                        document.getElementById('respuestas_periodo').textContent = data.respuestas_periodo;
+                        document.getElementById('promedio_general').textContent = data.promedio_general + '/5';
+                        
+                        // Actualizar gráfico de evolución
+                        if (trendChart) {
+                            trendChart.data.labels = data.fechas;
+                            trendChart.data.datasets[0].data = data.totales;
+                            trendChart.update();
+                        }
+                        
+                        // Actualizar gráficos de preguntas
+                        for (let i = 0; i < data.preguntas_stats.length; i++) {
+                            const stat = data.preguntas_stats[i];
+                            if (preguntaCharts[i]) {
+                                preguntaCharts[i].data.datasets[0].data = stat.distribucion;
+                                preguntaCharts[i].update();
+                            }
+                            // Actualizar texto de total y promedio
+                            const container = document.getElementById(`chart_${i+1}`)?.parentElement;
+                            if (container) {
+                                const p = container.querySelector('p');
+                                if (p) p.textContent = `Total: ${stat.total} respuestas | Promedio: ${stat.promedio}/5`;
+                            }
+                        }
+                    }
+                });
+        }
+        
+        function limpiarFiltros() {
+            document.getElementById('fecha_desde').value = '';
+            document.getElementById('fecha_hasta').value = '';
+            aplicarFiltros();
+        }
+        
+        // ==================== NAVEGACIÓN ENTRE SECCIONES ====================
+        const secciones = ['dashboard', 'preguntas', 'qr'];
+        const titulos = {
+            'dashboard': 'Dashboard de Satisfacción',
+            'preguntas': 'Gestión de Preguntas',
+            'qr': 'Códigos QR'
+        };
+        
+        document.querySelectorAll('.nav-item[data-seccion]').forEach(item => {
+            item.addEventListener('click', () => {
+                const seccion = item.dataset.seccion;
+                
+                document.querySelectorAll('.nav-item[data-seccion]').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                
+                document.querySelectorAll('.seccion').forEach(sec => sec.classList.remove('active'));
+                document.getElementById(`seccion-${seccion}`).classList.add('active');
+                
+                document.getElementById('titulo-seccion').textContent = titulos[seccion];
+            });
+        });
+        
+        // ==================== GRÁFICOS INICIALES ====================
+        const fechas = {{ respuestas_por_dia|safe }};
+        const labels = fechas.map(d => d.fecha);
+        const totals = fechas.map(d => d.total);
+        
+        trendChart = new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Respuestas por día',
+                    data: totals,
+                    borderColor: '#ff6b00',
+                    backgroundColor: 'rgba(255,107,0,0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+        
+        {% for stat in stats_preguntas %}
+        preguntaCharts[{{ forloop.counter0 }}] = new Chart(document.getElementById('chart_{{ forloop.counter }}'), {
+            type: 'bar',
+            data: {
+                labels: ['1★', '2★', '3★', '4★', '5★'],
+                datasets: [{
+                    label: 'Cantidad de respuestas',
+                    data: [
+                        {{ stat.distribucion.1 }},
+                        {{ stat.distribucion.2 }},
+                        {{ stat.distribucion.3 }},
+                        {{ stat.distribucion.4 }},
+                        {{ stat.distribucion.5 }}
+                    ],
+                    backgroundColor: '#ff6b00',
+                    borderRadius: 10
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+        {% endfor %}
+        
+        // ==================== CÓDIGOS QR EXISTENTES ====================
+        {% for qr in codigos_qr %}
+        new QRCode(document.getElementById("qr-{{ qr.id }}"), {
+            text: "{{ request.build_absolute_uri }}{{ qr.get_url }}",
+            width: 120,
+            height: 120
+        });
+        {% endfor %}
+        
+        // ==================== FUNCIONES PARA PREGUNTAS ====================
+        function abrirModalPregunta() {
+            document.getElementById('modalPreguntaTitulo').textContent = 'Nueva Pregunta';
+            document.getElementById('preguntaId').value = '';
+            document.getElementById('preguntaTexto').value = '';
+            document.getElementById('preguntaOrden').value = '0';
+            document.getElementById('preguntaActiva').checked = true;
+            document.getElementById('modalPregunta').style.display = 'flex';
+        }
+        
+        function cerrarModalPregunta() {
+            document.getElementById('modalPregunta').style.display = 'none';
+        }
+        
+        function editarPregunta(id) {
+            fetch(`/pregunta/${id}/datos/`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('modalPreguntaTitulo').textContent = 'Editar Pregunta';
+                    document.getElementById('preguntaId').value = data.id;
+                    document.getElementById('preguntaTexto').value = data.texto;
+                    document.getElementById('preguntaOrden').value = data.orden;
+                    document.getElementById('preguntaActiva').checked = data.activa;
+                    document.getElementById('modalPregunta').style.display = 'flex';
+                });
+        }
+        
+        function eliminarPregunta(id) {
+            if (!confirm('¿Eliminar esta pregunta permanentemente?')) return;
+            
+            fetch(`/pregunta/${id}/eliminar/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al eliminar');
+                }
+            });
+        }
+        
+        document.getElementById('formPregunta').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('preguntaId').value;
+            const texto = document.getElementById('preguntaTexto').value.trim();
+            const orden = document.getElementById('preguntaOrden').value;
+            const activa = document.getElementById('preguntaActiva').checked;
+            
+            if (!texto) {
+                alert('Escribe el texto de la pregunta');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('texto', texto);
+            formData.append('orden', orden);
+            formData.append('activa', activa);
+            
+            const url = id ? `/pregunta/${id}/editar/` : '/pregunta/crear/';
+            
+            const res = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo guardar'));
+            }
+        };
+        
+        // ==================== FUNCIONES PARA QR ====================
+        function abrirModalQR() {
+            document.getElementById('modalQR').style.display = 'flex';
+            document.getElementById('qrNombre').value = '';
+        }
+        
+        function cerrarModalQR() {
+            document.getElementById('modalQR').style.display = 'none';
+        }
+        
+        document.getElementById('formQR').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('qrNombre').value.trim();
+            if (!nombre) {
+                alert('Escribe un nombre para el QR');
+                return;
+            }
+            
+            const btn = document.getElementById('btnGenerarQR');
+            btn.disabled = true;
+            btn.textContent = 'Generando...';
+            
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            
+            try {
+                const res = await fetch('/generar-qr/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo generar el QR'));
+                    btn.disabled = false;
+                    btn.textContent = 'Generar QR';
+                }
+            } catch (error) {
+                alert('Error de conexión al servidor');
+                btn.disabled = false;
+                btn.textContent = 'Generar QR';
+            }
+        };
+        
+        async function eliminarQR(id) {
+            if (!confirm('¿Eliminar este código QR?')) return;
+            
+            try {
+                const res = await fetch(`/eliminar-qr/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al eliminar');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+        
+        // Cerrar modales al hacer clic fuera
+        window.onclick = (e) => {
+            if (e.target === document.getElementById('modalPregunta')) cerrarModalPregunta();
+            if (e.target === document.getElementById('modalQR')) cerrarModalQR();
+        };
+    </script>
+</body>
+</html>

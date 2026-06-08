@@ -1,13 +1,40 @@
 from django.db import models
+import uuid
+
+class Pregunta(models.Model):
+    TIPO_PREGUNTA = [
+        ('estrella', 'Calificación por estrellas (1-5)'),
+    ]
+    
+    texto = models.CharField(max_length=500, verbose_name="Texto de la pregunta")
+    tipo = models.CharField(max_length=20, choices=TIPO_PREGUNTA, default='estrella')
+    activa = models.BooleanField(default=True, verbose_name="¿Activa?")
+    orden = models.IntegerField(default=0, verbose_name="Orden de aparición")
+    creada = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['orden', 'id']
+    
+    def __str__(self):
+        return f"{self.texto[:50]}"
 
 class Respuesta(models.Model):
-    CALIFICACIONES = [(1, '⭐'), (2, '⭐⭐'), (3, '⭐⭐⭐'), (4, '⭐⭐⭐⭐'), (5, '⭐⭐⭐⭐⭐')]
-    
-    comida = models.IntegerField(choices=CALIFICACIONES, verbose_name="Comida")
-    servicio = models.IntegerField(choices=CALIFICACIONES, verbose_name="Servicio")
-    ambiente = models.IntegerField(choices=CALIFICACIONES, verbose_name="Ambiente")
-    comentario = models.TextField(blank=True, verbose_name="Comentario (opcional)")
+    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE, related_name='respuestas')
+    valor_estrella = models.IntegerField(null=True, blank=True)
+    session_id = models.CharField(max_length=100, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Encuesta del {self.fecha.strftime('%d/%m/%Y %H:%M')}"
+        return f"⭐ {self.valor_estrella} - {self.pregunta.texto[:30]}"
+
+class CodigoQR(models.Model):
+    nombre = models.CharField(max_length=100, verbose_name="Nombre del QR")
+    codigo = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.nombre
+    
+    def get_url(self):
+        return f"/qr/{self.codigo}/"
