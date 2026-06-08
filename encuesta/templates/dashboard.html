@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Encuestas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .header { background: #ff6b00; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 15px; margin-bottom: 30px; }
+        .metric { text-align: center; background: white; padding: 20px; border-radius: 10px; }
+        .metric h3 { color: #666; font-size: 14px; }
+        .metric .number { font-size: 36px; font-weight: bold; color: #ff6b00; }
+        table { width: 100%; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #333; color: white; }
+        .estrella { color: #ffc107; font-size: 18px; }
+        .login { max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>📊 Dashboard de Satisfacción</h2>
+        <span>Total: {{ total }} encuestas</span>
+    </div>
+    
+    <div class="grid">
+        <div class="metric">
+            <h3>🍽️ Comida</h3>
+            <div class="number">{{ promedio_comida }}/5</div>
+        </div>
+        <div class="metric">
+            <h3>🛎️ Servicio</h3>
+            <div class="number">{{ promedio_servicio }}/5</div>
+        </div>
+        <div class="metric">
+            <h3>🏠 Ambiente</h3>
+            <div class="number">{{ promedio_ambiente }}/5</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>📝 Últimas respuestas</h3>
+        <table style="margin-top: 15px;">
+            <thead>
+                <tr><th>Fecha</th><th>Comida</th><th>Servicio</th><th>Ambiente</th><th>Comentario</th></tr>
+            </thead>
+            <tbody>
+                {% for r in respuestas_recientes %}
+                <tr>
+                    <td>{{ r.fecha|date:"d/m H:i" }}</td>
+                    <td class="estrella">{% for i in "12345" %}{% if i|add:"0" <= r.comida %}★{% else %}☆{% endif %}{% endfor %}</td>
+                    <td class="estrella">{% for i in "12345" %}{% if i|add:"0" <= r.servicio %}★{% else %}☆{% endif %}{% endfor %}</td>
+                    <td class="estrella">{% for i in "12345" %}{% if i|add:"0" <= r.ambiente %}★{% else %}☆{% endif %}{% endfor %}</td>
+                    <td>{{ r.comentario|default:"-"|truncatechars:40 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">Aún no hay respuestas</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
