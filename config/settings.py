@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-ti=vi)dcg*z9g%^i74nhzog2x=)no8ot!=bq3h@_#%us=*oy++
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['chiwu.mx', 'www.chiwu.mx', '2.25.183.213', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -130,4 +129,13 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://chiwu.mx',
+    'https://www.chiwu.mx',
+    'http://chiwu.mx',
+    'http://www.chiwu.mx',
+]
