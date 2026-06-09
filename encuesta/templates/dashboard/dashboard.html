@@ -722,7 +722,7 @@
                         <h4>{{ qr.nombre }}</h4>
                         <div class="qr-code" id="qr-{{ qr.id }}"></div>
                         <p style="font-size:11px; color:#999; word-break:break-all; margin-top:10px;">
-                            URL: {{ request.build_absolute_uri }}{% url 'encuesta_qr' qr.codigo %}
+                            URL: https://chiwu.mx{% url 'encuesta_qr' qr.codigo %}
                         </p>
                         <button class="btn btn-danger" style="margin-top:10px; width:100%;" onclick="eliminarQR({{ qr.id }})">
                             Eliminar
@@ -926,7 +926,7 @@
         // QR
         {% for qr in codigos_qr %}
         new QRCode(document.getElementById("qr-{{ qr.id }}"), {
-            text: "{{ request.build_absolute_uri }}{% url 'encuesta_qr' qr.codigo %}",
+            text: "https://chiwu.mx{% url 'encuesta_qr' qr.codigo %}",
             width: 120,
             height: 120
         });
