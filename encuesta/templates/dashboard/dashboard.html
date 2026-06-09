@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Dashboard - Chiwu Banderillas Coreanas</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,6 +19,31 @@
             color: #1e293b;
         }
         
+        /* Botón menú hamburguesa (solo visible en móvil) */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 1001;
+            background: #ff6b00;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 3px;
+            transition: 0.3s;
+        }
+        
         /* Sidebar */
         .sidebar {
             position: fixed;
@@ -31,6 +56,20 @@
             padding: 24px;
             box-shadow: 2px 0 20px rgba(0,0,0,0.1);
             overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        /* Overlay para cerrar menú en móvil */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
         }
         
         .logo {
@@ -88,6 +127,7 @@
         .main-content {
             margin-left: 280px;
             padding: 32px;
+            transition: margin-left 0.3s ease;
         }
         
         /* Header */
@@ -283,6 +323,7 @@
         .preguntas-table table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 500px;
         }
         
         .preguntas-table th,
@@ -394,7 +435,7 @@
             background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 1100;
         }
         
         .modal-content {
@@ -403,6 +444,8 @@
             padding: 32px;
             max-width: 500px;
             width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .modal-content input,
@@ -433,19 +476,72 @@
             margin: 0;
         }
         
+        /* Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                display: none;
+            .menu-toggle {
+                display: block;
             }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
             .main-content {
                 margin-left: 0;
                 padding: 20px;
+                padding-top: 70px;
             }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+                margin-left: 50px;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+            }
+            
             .filtros-group {
                 flex-direction: column;
             }
+            
             .filtro-item {
                 width: 100%;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .qr-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .qr-header {
+                flex-direction: column;
+            }
+            
+            .preguntas-header {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
         
@@ -459,11 +555,20 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <!-- Botón menú hamburguesa -->
+    <button class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <!-- Overlay para cerrar menú -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <div class="sidebar" id="sidebar">
         {% load static %}
         <div class="logo">
             <img src="{% static 'logo.png' %}" alt="Chiwu" style="width: 120px; height: 80px; object-fit: contain; margin-bottom: 15px;">
-            
         </div>
         
         <div class="nav-section">
@@ -503,7 +608,6 @@
         
         <!-- Sección Dashboard -->
         <div id="seccion-dashboard" class="seccion active">
-            <!-- Filtros de fecha -->
             <div class="filtros-container">
                 <div class="filtros-title">📅 Filtrar por fecha</div>
                 <div class="filtros-group">
@@ -565,37 +669,42 @@
                     <button class="btn btn-primary" onclick="abrirModalPregunta()">+ Nueva Pregunta</button>
                 </div>
                 <div class="preguntas-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Orden</th>
-                                <th>Pregunta</th>
-                                <th>Tipo</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-preguntas">
-                            {% for pregunta in preguntas %}
-                            <tr id="pregunta-row-{{ pregunta.id }}">
-                                <td>{{ pregunta.orden }}</td>
-                                <td>{{ pregunta.texto }}</td>
-                                <td>⭐ Estrellas</td>
-                                <td class="{% if pregunta.activa %}estado-activo{% else %}estado-inactivo{% endif %}">
-                                    {% if pregunta.activa %}Activa{% else %}Inactiva{% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-small btn-warning" onclick="editarPregunta({{ pregunta.id }})">✏️</button>
-                                    <button class="btn btn-small btn-danger" onclick="eliminarPregunta({{ pregunta.id }})">🗑️</button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5">No hay preguntas creadas. ¡Crea una!</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Pregunta</th>
+                                    <th>Tipo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-preguntas">
+                                {% for pregunta in preguntas %}
+                                <tr id="pregunta-row-{{ pregunta.id }}">
+                                    <td>{{ pregunta.orden }}</td>
+                                    <td>{{ pregunta.texto }}</td>
+                                    <td>{% if pregunta.tipo == 'estrella' %}⭐ Estrellas{% else %}📋 Selección{% endif %}</td>
+                                    <td class="{% if pregunta.activa %}estado-activo{% else %}estado-inactivo{% endif %}">
+                                        {% if pregunta.activa %}Activa{% else %}Inactiva{% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-small btn-warning" onclick="editarPregunta({{ pregunta.id }})">✏️</button>
+                                        <button class="btn btn-small btn-success" onclick="toggleActiva({{ pregunta.id }}, {{ pregunta.activa|lower }})">
+                                            {% if pregunta.activa %}🔓 Desactivar{% else %}🔒 Activar{% endif %}
+                                        </button>
+                                        <button class="btn btn-small btn-danger" onclick="eliminarPregunta({{ pregunta.id }})">🗑️</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No hay preguntas creadas. ¡Crea una!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -613,7 +722,7 @@
                         <h4>{{ qr.nombre }}</h4>
                         <div class="qr-code" id="qr-{{ qr.id }}"></div>
                         <p style="font-size:11px; color:#999; word-break:break-all; margin-top:10px;">
-                            URL: http://127.0.0.1:8000{% url 'encuesta_qr' qr.codigo %}
+                            URL: {{ request.build_absolute_uri }}{% url 'encuesta_qr' qr.codigo %}
                         </p>
                         <button class="btn btn-danger" style="margin-top:10px; width:100%;" onclick="eliminarQR({{ qr.id }})">
                             Eliminar
@@ -627,7 +736,7 @@
         </div>
     </div>
     
-    <!-- Modal para crear/editar pregunta -->
+    <!-- Modales (igual que antes) -->
     <div id="modalPregunta" class="modal">
         <div class="modal-content">
             <h2 id="modalPreguntaTitulo">Nueva Pregunta</h2>
@@ -635,15 +744,21 @@
                 <input type="hidden" id="preguntaId" value="">
                 <label>Texto de la pregunta</label>
                 <textarea id="preguntaTexto" rows="3" required placeholder="Escribe la pregunta..."></textarea>
-                
+                <label>Tipo de pregunta</label>
+                <select id="preguntaTipo">
+                    <option value="estrella">⭐ Calificación por estrellas (1-5)</option>
+                    <option value="seleccion">📋 Selección múltiple (opciones)</option>
+                </select>
+                <div id="opcionesContainer" style="display: none;">
+                    <label>Opciones (una por línea)</label>
+                    <textarea id="preguntaOpciones" rows="4" placeholder="Ejemplo:&#10;TikTok&#10;Facebook&#10;Instagram&#10;Personas&#10;Otros"></textarea>
+                </div>
                 <label>Orden de aparición</label>
                 <input type="number" id="preguntaOrden" value="0" placeholder="Número más pequeño = aparece primero">
-                
                 <div class="form-check">
                     <input type="checkbox" id="preguntaActiva" checked>
                     <label>¿Pregunta activa?</label>
                 </div>
-                
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="submit" class="btn btn-primary">Guardar</button>
                     <button type="button" class="btn" onclick="cerrarModalPregunta()" style="background:#ccc;">Cancelar</button>
@@ -652,7 +767,6 @@
         </div>
     </div>
     
-    <!-- Modal para generar QR -->
     <div id="modalQR" class="modal">
         <div class="modal-content">
             <h2>Generar Código QR</h2>
@@ -660,7 +774,6 @@
             <form id="formQR">
                 <label>Nombre del QR (ej: Mesa 1, Promoción, Publicidad)</label>
                 <input type="text" id="qrNombre" required placeholder="Ej: Mesa 1" autocomplete="off">
-                
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="submit" class="btn btn-primary" id="btnGenerarQR">Generar QR</button>
                     <button type="button" class="btn" onclick="cerrarModalQR()" style="background:#ccc;">Cancelar</button>
@@ -671,50 +784,79 @@
     
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script>
+        // ==================== MENÚ HAMBURGUESA ====================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        function openMenu() {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('active');
+        }
+        
+        function closeMenu() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        }
+        
+        menuToggle.addEventListener('click', openMenu);
+        sidebarOverlay.addEventListener('click', closeMenu);
+        
+        // Cerrar menú al seleccionar una opción (en móvil)
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeMenu();
+                }
+            });
+        });
+        
+        // Guardar sección activa
+        function guardarSeccionActiva(seccion) {
+            localStorage.setItem('seccionActiva', seccion);
+        }
+        
+        function restaurarSeccionActiva() {
+            const seccionGuardada = localStorage.getItem('seccionActiva');
+            if (seccionGuardada && seccionGuardada !== 'dashboard') {
+                const navItem = document.querySelector(`.nav-item[data-seccion="${seccionGuardada}"]`);
+                if (navItem) {
+                    navItem.click();
+                }
+            }
+        }
+        
         // Variables globales
         let trendChart = null;
         let preguntaCharts = {};
         
-        // Función para obtener CSRF token
         function getCookie(name) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
         }
         
-        // ==================== FILTROS Y ESTADÍSTICAS ====================
+        // Filtros
         function aplicarFiltros() {
             const fechaDesde = document.getElementById('fecha_desde').value;
             const fechaHasta = document.getElementById('fecha_hasta').value;
-            
             fetch(`/estadisticas-filtradas/?desde=${fechaDesde}&hasta=${fechaHasta}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        // Actualizar estadísticas
                         document.getElementById('total_respuestas').textContent = data.total_respuestas;
                         document.getElementById('respuestas_periodo').textContent = data.respuestas_periodo;
                         document.getElementById('promedio_general').textContent = data.promedio_general + '/5';
-                        
-                        // Actualizar gráfico de evolución
                         if (trendChart) {
                             trendChart.data.labels = data.fechas;
                             trendChart.data.datasets[0].data = data.totales;
                             trendChart.update();
                         }
-                        
-                        // Actualizar gráficos de preguntas
                         for (let i = 0; i < data.preguntas_stats.length; i++) {
                             const stat = data.preguntas_stats[i];
                             if (preguntaCharts[i]) {
                                 preguntaCharts[i].data.datasets[0].data = stat.distribucion;
                                 preguntaCharts[i].update();
-                            }
-                            // Actualizar texto de total y promedio
-                            const container = document.getElementById(`chart_${i+1}`)?.parentElement;
-                            if (container) {
-                                const p = container.querySelector('p');
-                                if (p) p.textContent = `Total: ${stat.total} respuestas | Promedio: ${stat.promedio}/5`;
                             }
                         }
                     }
@@ -727,29 +869,24 @@
             aplicarFiltros();
         }
         
-        // ==================== NAVEGACIÓN ENTRE SECCIONES ====================
-        const secciones = ['dashboard', 'preguntas', 'qr'];
-        const titulos = {
-            'dashboard': 'Dashboard de Satisfacción',
-            'preguntas': 'Gestión de Preguntas',
-            'qr': 'Códigos QR'
-        };
-        
+        // Navegación
         document.querySelectorAll('.nav-item[data-seccion]').forEach(item => {
             item.addEventListener('click', () => {
                 const seccion = item.dataset.seccion;
-                
                 document.querySelectorAll('.nav-item[data-seccion]').forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
-                
                 document.querySelectorAll('.seccion').forEach(sec => sec.classList.remove('active'));
                 document.getElementById(`seccion-${seccion}`).classList.add('active');
-                
-                document.getElementById('titulo-seccion').textContent = titulos[seccion];
+                document.getElementById('titulo-seccion').textContent = {
+                    'dashboard': 'Dashboard de Satisfacción',
+                    'preguntas': 'Gestión de Preguntas',
+                    'qr': 'Códigos QR'
+                }[seccion];
+                guardarSeccionActiva(seccion);
             });
         });
         
-        // ==================== GRÁFICOS INICIALES ====================
+        // Gráficos iniciales
         const fechas = {{ respuestas_por_dia|safe }};
         const labels = fechas.map(d => d.fecha);
         const totals = fechas.map(d => d.total);
@@ -777,13 +914,7 @@
                 labels: ['1★', '2★', '3★', '4★', '5★'],
                 datasets: [{
                     label: 'Cantidad de respuestas',
-                    data: [
-                        {{ stat.distribucion.1 }},
-                        {{ stat.distribucion.2 }},
-                        {{ stat.distribucion.3 }},
-                        {{ stat.distribucion.4 }},
-                        {{ stat.distribucion.5 }}
-                    ],
+                    data: [{{ stat.distribucion.1 }}, {{ stat.distribucion.2 }}, {{ stat.distribucion.3 }}, {{ stat.distribucion.4 }}, {{ stat.distribucion.5 }}],
                     backgroundColor: '#ff6b00',
                     borderRadius: 10
                 }]
@@ -792,22 +923,29 @@
         });
         {% endfor %}
         
-        // ==================== CÓDIGOS QR EXISTENTES ====================
+        // QR
         {% for qr in codigos_qr %}
         new QRCode(document.getElementById("qr-{{ qr.id }}"), {
-            text: "{{ request.build_absolute_uri }}{{ qr.get_url }}",
+            text: "{{ request.build_absolute_uri }}{% url 'encuesta_qr' qr.codigo %}",
             width: 120,
             height: 120
         });
         {% endfor %}
         
-        // ==================== FUNCIONES PARA PREGUNTAS ====================
+        // Gestión de preguntas
+        document.getElementById('preguntaTipo').addEventListener('change', function() {
+            document.getElementById('opcionesContainer').style.display = this.value === 'seleccion' ? 'block' : 'none';
+        });
+        
         function abrirModalPregunta() {
             document.getElementById('modalPreguntaTitulo').textContent = 'Nueva Pregunta';
             document.getElementById('preguntaId').value = '';
             document.getElementById('preguntaTexto').value = '';
+            document.getElementById('preguntaTipo').value = 'estrella';
+            document.getElementById('preguntaOpciones').value = '';
             document.getElementById('preguntaOrden').value = '0';
             document.getElementById('preguntaActiva').checked = true;
+            document.getElementById('opcionesContainer').style.display = 'none';
             document.getElementById('modalPregunta').style.display = 'flex';
         }
         
@@ -822,64 +960,55 @@
                     document.getElementById('modalPreguntaTitulo').textContent = 'Editar Pregunta';
                     document.getElementById('preguntaId').value = data.id;
                     document.getElementById('preguntaTexto').value = data.texto;
+                    document.getElementById('preguntaTipo').value = data.tipo || 'estrella';
+                    document.getElementById('preguntaOpciones').value = data.opciones || '';
                     document.getElementById('preguntaOrden').value = data.orden;
                     document.getElementById('preguntaActiva').checked = data.activa;
+                    document.getElementById('opcionesContainer').style.display = data.tipo === 'seleccion' ? 'block' : 'none';
                     document.getElementById('modalPregunta').style.display = 'flex';
                 });
         }
         
         function eliminarPregunta(id) {
             if (!confirm('¿Eliminar esta pregunta permanentemente?')) return;
-            
             fetch(`/pregunta/${id}/eliminar/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error al eliminar');
-                }
-            });
+            }).then(res => res.json()).then(data => { if (data.success) location.reload(); });
         }
         
         document.getElementById('formPregunta').onsubmit = async (e) => {
             e.preventDefault();
-            
             const id = document.getElementById('preguntaId').value;
             const texto = document.getElementById('preguntaTexto').value.trim();
+            const tipo = document.getElementById('preguntaTipo').value;
+            const opciones = document.getElementById('preguntaOpciones').value;
             const orden = document.getElementById('preguntaOrden').value;
             const activa = document.getElementById('preguntaActiva').checked;
-            
-            if (!texto) {
-                alert('Escribe el texto de la pregunta');
-                return;
-            }
-            
+            if (!texto) return alert('Escribe el texto de la pregunta');
+            if (tipo === 'seleccion' && !opciones.trim()) return alert('Agrega al menos una opción');
             const formData = new FormData();
             formData.append('texto', texto);
+            formData.append('tipo', tipo);
+            formData.append('opciones', opciones);
             formData.append('orden', orden);
             formData.append('activa', activa);
-            
             const url = id ? `/pregunta/${id}/editar/` : '/pregunta/crear/';
-            
-            const res = await fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            });
+            const res = await fetch(url, { method: 'POST', body: formData, headers: { 'X-CSRFToken': getCookie('csrftoken') } });
             const data = await res.json();
-            
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || 'No se pudo guardar'));
-            }
+            if (data.success) location.reload();
+            else alert('Error: ' + (data.error || 'No se pudo guardar'));
         };
         
-        // ==================== FUNCIONES PARA QR ====================
+        function toggleActiva(id, activaActual) {
+            fetch(`/pregunta/${id}/toggle-activa/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+                body: `activa=${!activaActual}`
+            }).then(res => res.json()).then(data => { if (data.success) location.reload(); });
+        }
+        
+        // QR
         function abrirModalQR() {
             document.getElementById('modalQR').style.display = 'flex';
             document.getElementById('qrNombre').value = '';
@@ -891,66 +1020,38 @@
         
         document.getElementById('formQR').onsubmit = async (e) => {
             e.preventDefault();
-            
             const nombre = document.getElementById('qrNombre').value.trim();
-            if (!nombre) {
-                alert('Escribe un nombre para el QR');
-                return;
-            }
-            
+            if (!nombre) return alert('Escribe un nombre para el QR');
             const btn = document.getElementById('btnGenerarQR');
             btn.disabled = true;
             btn.textContent = 'Generando...';
-            
             const formData = new FormData();
             formData.append('nombre', nombre);
-            
             try {
-                const res = await fetch('/generar-qr/', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
-                });
+                const res = await fetch('/generar-qr/', { method: 'POST', body: formData, headers: { 'X-CSRFToken': getCookie('csrftoken') } });
                 const data = await res.json();
-                
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'No se pudo generar el QR'));
-                    btn.disabled = false;
-                    btn.textContent = 'Generar QR';
-                }
-            } catch (error) {
-                alert('Error de conexión al servidor');
-                btn.disabled = false;
-                btn.textContent = 'Generar QR';
-            }
+                if (data.success) location.reload();
+                else alert('Error: ' + (data.error || 'No se pudo generar el QR'));
+            } catch (error) { alert('Error de conexión'); }
+            finally { btn.disabled = false; btn.textContent = 'Generar QR'; }
         };
         
         async function eliminarQR(id) {
             if (!confirm('¿Eliminar este código QR?')) return;
-            
             try {
-                const res = await fetch(`/eliminar-qr/${id}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
-                });
+                const res = await fetch(`/eliminar-qr/${id}/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
                 const data = await res.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error al eliminar');
-                }
-            } catch (error) {
-                alert('Error de conexión');
-            }
+                if (data.success) location.reload();
+                else alert('Error al eliminar');
+            } catch (error) { alert('Error de conexión'); }
         }
         
-        // Cerrar modales al hacer clic fuera
         window.onclick = (e) => {
             if (e.target === document.getElementById('modalPregunta')) cerrarModalPregunta();
             if (e.target === document.getElementById('modalQR')) cerrarModalQR();
         };
+        
+        restaurarSeccionActiva();
     </script>
 </body>
 </html>

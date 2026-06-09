@@ -14,4 +14,5 @@ urlpatterns = [
     path('pregunta/<int:pregunta_id>/eliminar/', views.eliminar_pregunta_api, name='eliminar_pregunta_api'),
     path('pregunta/<int:pregunta_id>/datos/', views.obtener_pregunta_api, name='obtener_pregunta_api'),
     path('estadisticas-filtradas/', views.estadisticas_filtradas, name='estadisticas_filtradas'),
+    path('pregunta/<int:pregunta_id>/toggle-activa/', views.toggle_activa_pregunta, name='toggle_activa_pregunta'),
 ]

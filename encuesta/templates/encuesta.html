@@ -42,11 +42,10 @@
         }
 
         .logo img {
-            width: 80px;
-            height: 80px;
+            width: 150px;
+            height: 150px;
             object-fit: contain;
-            border-radius: 20px;
-            margin-bottom: 10px;
+            
         }
 
         .logo h3 {
@@ -188,8 +187,8 @@
                 font-size: 16px;
             }
             .logo img {
-                width: 60px;
-                height: 60px;
+                width: 150px;
+                height: 150px;
             }
         }
     </style>
@@ -206,7 +205,8 @@
             {
                 id: {{ p.id }},
                 texto: "{{ p.texto|escapejs }}",
-                tipo: "{{ p.tipo }}"
+                tipo: "{{ p.tipo }}",
+                opciones: "{{ p.opciones|escapejs }}"
             }{% if not forloop.last %},{% endif %}
             {% endfor %}
         ];
@@ -228,15 +228,24 @@
             // Si aún hay preguntas
             if (currentIndex < preguntas.length) {
                 app.innerHTML = renderPregunta(currentIndex);
-                attachEstrellaEvents();
+                attachEvents();
             }
         }
 
         function renderPregunta(index) {
             const pregunta = preguntas[index];
-            const progreso = ((index) / preguntas.length) * 100;
+            const progreso = (index / preguntas.length) * 100;
             const esUltima = (index === preguntas.length - 1);
             
+            if (pregunta.tipo === 'seleccion') {
+                return renderPreguntaSeleccion(pregunta, index, esUltima);
+            } else {
+                return renderPreguntaEstrella(pregunta, index, esUltima);
+            }
+        }
+
+        function renderPreguntaEstrella(pregunta, index, esUltima) {
+            const progreso = (index / preguntas.length) * 100;
             return `
                 <div class="card">
                     <div class="logo">
@@ -269,13 +278,52 @@
             `;
         }
 
+        function renderPreguntaSeleccion(pregunta, index, esUltima) {
+            const progreso = (index / preguntas.length) * 100;
+            const opciones = pregunta.opciones ? pregunta.opciones.split('\n') : [];
+            
+            return `
+                <div class="card">
+                    <div class="logo">
+                        <img src="{% static 'logo.png' %}" alt="Chiwu">
+                        <h3>Chiwu</h3>
+                        <p>Banderillas Coreanas</p>
+                    </div>
+                    
+                    <div class="progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progreso}%"></div>
+                        </div>
+                        <div class="progress-text">Pregunta ${index + 1} de ${preguntas.length}</div>
+                    </div>
+                    
+                    <div class="pregunta-texto">${pregunta.texto}</div>
+                    
+                    <div class="opciones" data-pregunta-id="${pregunta.id}">
+                        ${opciones.map(op => `
+                            <div class="opcion" style="margin: 10px 0; text-align: left;">
+                                <label style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer;">
+                                    <input type="radio" name="opcion" value="${op.trim()}" style="width: 20px; height: 20px;">
+                                    <span style="font-size: 16px;">${op.trim()}</span>
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <input type="hidden" id="valor-seleccionado" value="">
+                    
+                    <button id="btn-siguiente" disabled>
+                        ${esUltima ? '✨ Finalizar encuesta ✨' : 'Siguiente →'}
+                    </button>
+                </div>
+            `;
+        }
+
         function renderGracias() {
             return `
                 <div class="card gracias-card">
                     <div class="logo">
                         <img src="{% static 'logo.png' %}" alt="Chiwu">
-                        <h3>Chiwu</h3>
-                        <p>Banderillas Coreanas</p>
                     </div>
                     <div class="gracias-icon">🎉</div>
                     <h2>¡Gracias por tu opinión!</h2>
@@ -285,52 +333,110 @@
             `;
         }
 
-        function attachEstrellaEvents() {
-            const estrellas = document.querySelectorAll('.estrella');
+        function attachEvents() {
             const btnSiguiente = document.getElementById('btn-siguiente');
             const inputHidden = document.getElementById('valor-seleccionado');
             
-            let valorActual = null;
+            // Detectar si es tipo estrella o selección
+            const estrellas = document.querySelectorAll('.estrella');
+            const opciones = document.querySelectorAll('input[name="opcion"]');
             
-            estrellas.forEach(estrella => {
-                estrella.addEventListener('click', () => {
-                    const valor = parseInt(estrella.dataset.valor);
-                    valorActual = valor;
-                    inputHidden.value = valor;
-                    
-                    // Actualizar UI de estrellas
-                    estrellas.forEach((e, idx) => {
-                        if (idx < valor) {
-                            e.innerHTML = '★';
-                            e.classList.add('seleccionada');
-                        } else {
-                            e.innerHTML = '☆';
-                            e.classList.remove('seleccionada');
+            if (estrellas.length > 0) {
+                // Tipo estrella
+                estrellas.forEach(estrella => {
+                    estrella.addEventListener('click', () => {
+                        const valor = parseInt(estrella.dataset.valor);
+                        inputHidden.value = valor;
+                        
+                        estrellas.forEach((e, idx) => {
+                            if (idx < valor) {
+                                e.innerHTML = '★';
+                                e.classList.add('seleccionada');
+                            } else {
+                                e.innerHTML = '☆';
+                                e.classList.remove('seleccionada');
+                            }
+                        });
+                        btnSiguiente.disabled = false;
+                    });
+                });
+            } else if (opciones.length > 0) {
+                // Tipo selección
+                opciones.forEach(opcion => {
+                    opcion.addEventListener('change', () => {
+                        if (opcion.checked) {
+                            inputHidden.value = opcion.value;
+                            btnSiguiente.disabled = false;
                         }
                     });
-                    
-                    // Habilitar botón
-                    btnSiguiente.disabled = false;
                 });
-            });
+            }
             
             btnSiguiente.onclick = () => {
                 const valor = inputHidden.value;
                 if (!valor) return;
                 
-                const preguntaId = document.querySelector('.estrellas').dataset.preguntaId;
-                guardarRespuesta(preguntaId, valor);
+                let preguntaId = null;
+                const estrellasDiv = document.querySelector('.estrellas');
+                const opcionesDiv = document.querySelector('.opciones');
+                
+                if (estrellasDiv) {
+                    preguntaId = estrellasDiv.dataset.preguntaId;
+                } else {
+                    preguntaId = opcionesDiv.dataset.preguntaId;
+                }
+                
+                respuestas.push({
+                    pregunta_id: preguntaId,
+                    valor: valor
+                });
                 
                 if (currentIndex + 1 < preguntas.length) {
-                    // Siguiente pregunta
                     currentIndex++;
                     render();
                 } else {
-                    // Última pregunta, enviar todas las respuestas y mostrar gracias
+                    enviarRespuestasYFinalizar();
+                }
+            };
+
+            btnSiguiente.onclick = () => {
+                const valor = inputHidden.value;
+                console.log("Valor seleccionado:", valor);
+                console.log("CurrentIndex:", currentIndex);
+                console.log("Total preguntas:", preguntas.length);
+                
+                if (!valor) return;
+                
+                let preguntaId = null;
+                const estrellasDiv = document.querySelector('.estrellas');
+                const opcionesDiv = document.querySelector('.opciones');
+                
+                if (estrellasDiv) {
+                    preguntaId = estrellasDiv.dataset.preguntaId;
+                } else {
+                    preguntaId = opcionesDiv.dataset.preguntaId;
+                }
+                
+                respuestas.push({
+                    pregunta_id: preguntaId,
+                    valor: valor
+                });
+                
+                console.log("Respuestas:", respuestas);
+                
+                if (currentIndex + 1 < preguntas.length) {
+                    console.log("Avanzando a siguiente pregunta");
+                    currentIndex++;
+                    render();
+                } else {
+                    console.log("ES LA ÚLTIMA PREGUNTA - Enviando...");
                     enviarRespuestasYFinalizar();
                 }
             };
         }
+
+        // Cambiar el nombre de la función en render()
+
 
         function guardarRespuesta(preguntaId, valor) {
             respuestas.push({
@@ -340,7 +446,8 @@
         }
 
         function enviarRespuestasYFinalizar() {
-            // Enviar respuestas al servidor mediante fetch
+            console.log("Enviando respuestas:", JSON.stringify({respuestas: respuestas}));
+            
             fetch(window.location.href, {
                 method: 'POST',
                 headers: {
@@ -351,14 +458,16 @@
                     respuestas: respuestas
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log("Respuesta del servidor - Status:", response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log("Datos recibidos:", data);
                 if (data.success) {
-                    // Mostrar pantalla de gracias
                     currentIndex = -1;
                     render();
                     
-                    // Iniciar contador regresivo para reiniciar
                     let segundos = 5;
                     const contadorSpan = document.getElementById('contador');
                     if (timerReinicio) clearInterval(timerReinicio);
@@ -371,10 +480,14 @@
                             window.location.reload();
                         }
                     }, 1000);
+                } else {
+                    console.error("Error del servidor:", data.error);
+                    alert('Error: ' + (data.error || 'No se pudo guardar'));
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error de conexión:', error);
+                alert('Error de conexión al servidor');
             });
         }
 

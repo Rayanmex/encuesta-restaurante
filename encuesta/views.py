@@ -83,29 +83,38 @@ def estadisticas_filtradas(request):
     })
 
 # Vista pública de la encuesta
+# Vista pública de la encuesta
 def encuesta_publica(request):
     preguntas = Pregunta.objects.filter(activa=True)
     
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            respuestas = data.get('respuestas', [])
+            respuestas_data = data.get('respuestas', [])
             session_id = request.session.session_key or request.META.get('REMOTE_ADDR')
             
             if not request.session.session_key:
                 request.session.create()
                 session_id = request.session.session_key
             
-            for resp in respuestas:
-                pregunta_id = resp.get('pregunta_id')
-                valor = resp.get('valor')
+            for resp_data in respuestas_data:
+                pregunta_id = resp_data.get('pregunta_id')
+                valor = resp_data.get('valor')
                 pregunta = Pregunta.objects.get(id=pregunta_id)
                 
-                Respuesta.objects.create(
-                    pregunta=pregunta,
-                    valor_estrella=int(valor),
-                    session_id=session_id
-                )
+                # Guardar según el tipo de pregunta
+                if pregunta.tipo == 'estrella':
+                    Respuesta.objects.create(
+                        pregunta=pregunta,
+                        valor_estrella=int(valor),
+                        session_id=session_id
+                    )
+                elif pregunta.tipo == 'seleccion':
+                    Respuesta.objects.create(
+                        pregunta=pregunta,
+                        valor_seleccion=valor,
+                        session_id=session_id
+                    )
             
             return JsonResponse({'success': True})
         except Exception as e:
@@ -124,23 +133,31 @@ def encuesta_qr(request, codigo_uuid):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            respuestas = data.get('respuestas', [])
+            respuestas_data = data.get('respuestas', [])
             session_id = request.session.session_key or request.META.get('REMOTE_ADDR')
             
             if not request.session.session_key:
                 request.session.create()
                 session_id = request.session.session_key
             
-            for resp in respuestas:
-                pregunta_id = resp.get('pregunta_id')
-                valor = resp.get('valor')
+            for resp_data in respuestas_data:
+                pregunta_id = resp_data.get('pregunta_id')
+                valor = resp_data.get('valor')
                 pregunta = Pregunta.objects.get(id=pregunta_id)
                 
-                Respuesta.objects.create(
-                    pregunta=pregunta,
-                    valor_estrella=int(valor),
-                    session_id=session_id
-                )
+                # Guardar según el tipo de pregunta
+                if pregunta.tipo == 'estrella':
+                    Respuesta.objects.create(
+                        pregunta=pregunta,
+                        valor_estrella=int(valor),
+                        session_id=session_id
+                    )
+                elif pregunta.tipo == 'seleccion':
+                    Respuesta.objects.create(
+                        pregunta=pregunta,
+                        valor_seleccion=valor,
+                        session_id=session_id
+                    )
             
             return JsonResponse({'success': True})
         except Exception as e:
@@ -235,13 +252,16 @@ def eliminar_qr(request, qr_id):
 def crear_pregunta_api(request):
     if request.method == 'POST':
         texto = request.POST.get('texto')
+        tipo = request.POST.get('tipo', 'estrella')
+        opciones = request.POST.get('opciones', '')
         orden = request.POST.get('orden', 0)
         activa = request.POST.get('activa') == 'True'
         
         if texto:
             pregunta = Pregunta.objects.create(
                 texto=texto,
-                tipo='estrella',
+                tipo=tipo,
+                opciones=opciones if tipo == 'seleccion' else None,
                 orden=orden,
                 activa=activa
             )
@@ -253,6 +273,8 @@ def editar_pregunta_api(request, pregunta_id):
     if request.method == 'POST':
         pregunta = get_object_or_404(Pregunta, id=pregunta_id)
         pregunta.texto = request.POST.get('texto', pregunta.texto)
+        pregunta.tipo = request.POST.get('tipo', pregunta.tipo)
+        pregunta.opciones = request.POST.get('opciones', pregunta.opciones)
         pregunta.orden = request.POST.get('orden', pregunta.orden)
         pregunta.activa = request.POST.get('activa') == 'True'
         pregunta.save()
@@ -273,6 +295,18 @@ def obtener_pregunta_api(request, pregunta_id):
     return JsonResponse({
         'id': pregunta.id,
         'texto': pregunta.texto,
+        'tipo': pregunta.tipo,
+        'opciones': pregunta.opciones or '',
         'orden': pregunta.orden,
         'activa': pregunta.activa
     })
+    
+@login_required
+def toggle_activa_pregunta(request, pregunta_id):
+    if request.method == 'POST':
+        pregunta = get_object_or_404(Pregunta, id=pregunta_id)
+        activa = request.POST.get('activa') == 'true'
+        pregunta.activa = activa
+        pregunta.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
