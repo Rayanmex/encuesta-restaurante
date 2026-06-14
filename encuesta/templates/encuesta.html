@@ -199,6 +199,10 @@
     </div>
 
     <script>
+        // Versión del script - cambiar para forzar caché
+        const SCRIPT_VERSION = '2.1';
+        console.log("Script versión:", SCRIPT_VERSION);
+
         // Datos de las preguntas (se cargan desde Django)
         const preguntas = [
             {% for p in preguntas %}
@@ -371,33 +375,6 @@
                     });
                 });
             }
-            
-            btnSiguiente.onclick = () => {
-                const valor = inputHidden.value;
-                if (!valor) return;
-                
-                let preguntaId = null;
-                const estrellasDiv = document.querySelector('.estrellas');
-                const opcionesDiv = document.querySelector('.opciones');
-                
-                if (estrellasDiv) {
-                    preguntaId = estrellasDiv.dataset.preguntaId;
-                } else {
-                    preguntaId = opcionesDiv.dataset.preguntaId;
-                }
-                
-                respuestas.push({
-                    pregunta_id: preguntaId,
-                    valor: valor
-                });
-                
-                if (currentIndex + 1 < preguntas.length) {
-                    currentIndex++;
-                    render();
-                } else {
-                    enviarRespuestasYFinalizar();
-                }
-            };
 
             btnSiguiente.onclick = () => {
                 const valor = inputHidden.value;
@@ -445,33 +422,35 @@
             });
         }
 
-        function enviarRespuestasYFinalizar() {
-            console.log("Enviando respuestas:", JSON.stringify({respuestas: respuestas}));
+        function enviarRespuestasYFinalizar(intentos = 3) {
+            console.log("Enviando respuestas, intentos restantes:", intentos);
+            console.log("Datos:", respuestas);
             
             fetch(window.location.href, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({
-                    respuestas: respuestas
-                })
+                body: JSON.stringify({ respuestas: respuestas }),
+                credentials: 'same-origin'
             })
             .then(response => {
-                console.log("Respuesta del servidor - Status:", response.status);
+                console.log("Respuesta HTTP:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 return response.json();
             })
             .then(data => {
-                console.log("Datos recibidos:", data);
+                console.log("Respuesta del servidor:", data);
                 if (data.success) {
                     currentIndex = -1;
                     render();
-                    
                     let segundos = 5;
                     const contadorSpan = document.getElementById('contador');
                     if (timerReinicio) clearInterval(timerReinicio);
-                    
                     timerReinicio = setInterval(() => {
                         segundos--;
                         if (contadorSpan) contadorSpan.innerText = segundos;
@@ -481,13 +460,17 @@
                         }
                     }, 1000);
                 } else {
-                    console.error("Error del servidor:", data.error);
-                    alert('Error: ' + (data.error || 'No se pudo guardar'));
+                    throw new Error(data.error || 'Error desconocido');
                 }
             })
             .catch(error => {
-                console.error('Error de conexión:', error);
-                alert('Error de conexión al servidor');
+                console.error("Error:", error);
+                if (intentos > 1) {
+                    console.log("Reintentando en 2 segundos...");
+                    setTimeout(() => enviarRespuestasYFinalizar(intentos - 1), 2000);
+                } else {
+                    alert('Error de conexión. Por favor, verifica tu internet y vuelve a intentar.');
+                }
             });
         }
 
