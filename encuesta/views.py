@@ -8,6 +8,8 @@ from .models import Pregunta, Respuesta, CodigoQR
 import json
 from django.db.models import Q
 from datetime import datetime
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 @login_required
 def estadisticas_filtradas(request):
@@ -82,8 +84,11 @@ def estadisticas_filtradas(request):
         'preguntas_stats': preguntas_stats,
     })
 
+
 # Vista pública de la encuesta
-# Vista pública de la encuesta
+
+@ensure_csrf_cookie
+@never_cache
 def encuesta_publica(request):
     preguntas = Pregunta.objects.filter(activa=True)
     
@@ -125,7 +130,11 @@ def encuesta_publica(request):
     
     return render(request, 'encuesta.html', {'preguntas': preguntas})
 
+
+
 # Vista para QR (misma encuesta, diferente URL)
+@ensure_csrf_cookie
+@never_cache
 def encuesta_qr(request, codigo_uuid):
     codigo_qr = get_object_or_404(CodigoQR, codigo=codigo_uuid, activo=True)
     preguntas = Pregunta.objects.filter(activa=True)
