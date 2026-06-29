@@ -4,555 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Dashboard - Chiwu Banderillas Coreanas</title>
+    {% load static %}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f5f7fb;
-            color: #1e293b;
-        }
-        
-        /* Botón menú hamburguesa (solo visible en móvil) */
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            z-index: 1001;
-            background: #ff6b00;
-            border: none;
-            border-radius: 12px;
-            padding: 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        
-        .menu-toggle span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background: white;
-            margin: 5px 0;
-            border-radius: 3px;
-            transition: 0.3s;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 280px;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            padding: 24px;
-            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
-            overflow-y: auto;
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
-        
-        /* Overlay para cerrar menú en móvil */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        
-        .logo {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .logo h2 {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        
-        .logo p {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-        
-        .nav-section {
-            margin-bottom: 24px;
-        }
-        
-        .nav-section-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 12px;
-            padding-left: 12px;
-        }
-        
-        .nav-item {
-            padding: 12px 16px;
-            margin: 4px 0;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .nav-item:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .nav-item.active {
-            background: rgba(255,107,0,0.2);
-            border-left: 3px solid #ff6b00;
-        }
-        
-        /* Main content */
-        .main-content {
-            margin-left: 280px;
-            padding: 32px;
-            transition: margin-left 0.3s ease;
-        }
-        
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            background: white;
-            padding: 8px 20px;
-            border-radius: 50px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        /* Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .stat-card h3 {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 12px;
-        }
-        
-        .stat-number {
-            font-size: 36px;
-            font-weight: 800;
-            color: #ff6b00;
-        }
-        
-        /* Filtros */
-        .filtros-container {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 32px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .filtros-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1e293b;
-        }
-        
-        .filtros-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: flex-end;
-        }
-        
-        .filtro-item {
-            flex: 1;
-            min-width: 150px;
-        }
-        
-        .filtro-item label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 6px;
-        }
-        
-        .filtro-item input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-        
-        .btn-filtrar {
-            background: #ff6b00;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-filtrar:hover {
-            background: #e55a00;
-        }
-        
-        .btn-limpiar {
-            background: #64748b;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-limpiar:hover {
-            background: #475569;
-        }
-        
-        /* Charts */
-        .chart-container {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 32px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .chart-container h3 {
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        
-        canvas {
-            max-height: 300px;
-        }
-        
-        /* QR Manager */
-        .qr-section {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 32px;
-        }
-        
-        .qr-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        /* Preguntas Section */
-        .preguntas-section {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 32px;
-        }
-        
-        .preguntas-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        .preguntas-table {
-            width: 100%;
-            overflow-x: auto;
-        }
-        
-        .preguntas-table table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 500px;
-        }
-        
-        .preguntas-table th,
-        .preguntas-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .preguntas-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .estado-activo {
-            color: #10b981;
-            font-weight: 600;
-        }
-        
-        .estado-inactivo {
-            color: #ef4444;
-            font-weight: 600;
-        }
-        
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            margin: 0 4px;
-        }
-        
-        .btn-warning {
-            background: #ffc107;
-            color: #1e293b;
-        }
-        
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-        
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background: #ff6b00;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #e55a00;
-            transform: scale(1.02);
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #059669;
-        }
-        
-        .qr-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .qr-card {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .qr-code {
-            text-align: center;
-            margin: 15px 0;
-        }
-        
-        .qr-code canvas {
-            max-width: 150px;
-            margin: 0 auto;
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1100;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 24px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-content input,
-        .modal-content select,
-        .modal-content textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: inherit;
-        }
-        
-        .modal-content textarea {
-            resize: vertical;
-        }
-        
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .form-check input {
-            width: auto;
-            margin: 0;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: block;
-            }
-            
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .sidebar-overlay.active {
-                display: block;
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-                padding-top: 70px;
-            }
-            
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .header h1 {
-                font-size: 24px;
-                margin-left: 50px;
-            }
-            
-            .user-info {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .filtros-group {
-                flex-direction: column;
-            }
-            
-            .filtro-item {
-                width: 100%;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .qr-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-            
-            .qr-header {
-                flex-direction: column;
-            }
-            
-            .preguntas-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-        
-        .seccion {
-            display: none;
-        }
-        
-        .seccion.active {
-            display: block;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body>
     <!-- Botón menú hamburguesa -->
@@ -566,7 +21,6 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <div class="sidebar" id="sidebar">
-        {% load static %}
         <div class="logo">
             <img src="{% static 'logo.png' %}" alt="Chiwu" style="width: 120px; height: 80px; object-fit: contain; margin-bottom: 15px;">
         </div>
@@ -597,11 +51,9 @@
             <h1 id="titulo-seccion">Dashboard de Satisfacción</h1>
             <div class="user-info">
                 <span>👤 {{ user.username }}</span>
-                <form action="{% url 'logout' %}" method="post" style="display: inline; margin: 0;">
+                <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 14px; font-weight: 500;">
-                        🚪 Cerrar sesión
-                    </button>
+                    <button type="submit">🚪 Cerrar sesión</button>
                 </form>
             </div>
         </div>
@@ -613,11 +65,11 @@
                 <div class="filtros-group">
                     <div class="filtro-item">
                         <label>Desde</label>
-                        <input type="date" id="fecha_desde" value="{{ fecha_desde|default:'' }}">
+                        <input type="date" id="fecha_desde">
                     </div>
                     <div class="filtro-item">
                         <label>Hasta</label>
-                        <input type="date" id="fecha_hasta" value="{{ fecha_hasta|default:'' }}">
+                        <input type="date" id="fecha_hasta">
                     </div>
                     <div class="filtro-item">
                         <label>&nbsp;</label>
@@ -627,35 +79,77 @@
                         <label>&nbsp;</label>
                         <button class="btn-limpiar" onclick="limpiarFiltros()">🗑️ Limpiar</button>
                     </div>
+                    <div class="filtro-item">
+                        <label>&nbsp;</label>
+                        <a href="{% url 'generar_reporte_pdf' %}" target="_blank" class="btn btn-success" style="text-decoration: none; display: inline-block; text-align: center;">
+                            📄 Descargar Reporte PDF
+                        </a>
+                    </div>
                 </div>
             </div>
             
             <div class="stats-grid" id="stats-grid">
                 <div class="stat-card">
-                    <h3>📝 Total de Respuestas</h3>
-                    <div class="stat-number" id="total_respuestas">{{ total_respuestas }}</div>
+                    <h3>📝 Total de Encuestas</h3>
+                    <div class="stat-number" id="total_encuestas">{{ total_encuestas }}</div>
+                    <small style="color: #64748b; font-size: 12px;">Respondientes únicos</small>
                 </div>
                 <div class="stat-card">
-                    <h3>📊 Respuestas en período</h3>
-                    <div class="stat-number" id="respuestas_periodo">{{ respuestas_periodo|default:total_respuestas }}</div>
+                    <h3>📊 Total de Respuestas</h3>
+                    <div class="stat-number" id="total_respuestas">{{ total_respuestas }}</div>
+                    <small style="color: #64748b; font-size: 12px;">Respuestas individuales</small>
                 </div>
                 <div class="stat-card">
                     <h3>⭐ Promedio General</h3>
-                    <div class="stat-number" id="promedio_general">{{ promedio_general|default:promedio_hoy }}/5</div>
+                    <div class="stat-number" id="promedio_general">{{ promedio_general }}/5</div>
+                    <small style="color: #64748b; font-size: 12px;">Basado en respuestas de estrellas</small>
                 </div>
             </div>
             
             <div class="chart-container">
                 <h3>📈 Evolución de Respuestas</h3>
-                <canvas id="trendChart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="trendChart"></canvas>
+                </div>
             </div>
             
             <div id="charts-preguntas">
                 {% for stat in stats_preguntas %}
                 <div class="chart-container">
-                    <h3>⭐ {{ stat.pregunta.texto }}</h3>
-                    <p>Total: {{ stat.total }} respuestas | Promedio: {{ stat.promedio }}/5</p>
-                    <canvas id="chart_{{ forloop.counter }}"></canvas>
+                    <h3>
+                        {% if stat.tipo == 'estrella' %}⭐{% else %}📋{% endif %} 
+                        {{ stat.pregunta.texto }}
+                    </h3>
+                    <div class="chart-subtitle">
+                        Total: {{ stat.total_respuestas }} respuestas
+                        {% if stat.tipo == 'estrella' %}
+                        | Promedio: {{ stat.promedio }}/5
+                        {% endif %}
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart_{{ forloop.counter }}"></canvas>
+                    </div>
+                    <!-- Mostrar distribución en texto para preguntas de selección -->
+                    {% if stat.tipo == 'seleccion' %}
+                    <div class="distribucion-container">
+                        <strong>Distribución de respuestas:</strong>
+                        <div class="distribucion-tags">
+                            {% for opcion, data in stat.distribucion_con_porcentaje.items %}
+                            <span class="distribucion-tag">
+                                {{ opcion }}: {{ data.count }} ({{ data.percentage|floatformat:1 }}%)
+                            </span>
+                            {% empty %}
+                            <span style="color: #64748b;">No hay respuestas aún</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="chart-container">
+                    <p style="text-align: center; color: #64748b; padding: 40px 0;">
+                        No hay respuestas registradas aún.
+                    </p>
                 </div>
                 {% endfor %}
             </div>
@@ -669,42 +163,40 @@
                     <button class="btn btn-primary" onclick="abrirModalPregunta()">+ Nueva Pregunta</button>
                 </div>
                 <div class="preguntas-table">
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Orden</th>
-                                    <th>Pregunta</th>
-                                    <th>Tipo</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-preguntas">
-                                {% for pregunta in preguntas %}
-                                <tr id="pregunta-row-{{ pregunta.id }}">
-                                    <td>{{ pregunta.orden }}</td>
-                                    <td>{{ pregunta.texto }}</td>
-                                    <td>{% if pregunta.tipo == 'estrella' %}⭐ Estrellas{% else %}📋 Selección{% endif %}</td>
-                                    <td class="{% if pregunta.activa %}estado-activo{% else %}estado-inactivo{% endif %}">
-                                        {% if pregunta.activa %}Activa{% else %}Inactiva{% endif %}
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-small btn-warning" onclick="editarPregunta({{ pregunta.id }})">✏️</button>
-                                        <button class="btn btn-small btn-success" onclick="toggleActiva({{ pregunta.id }}, {{ pregunta.activa|lower }})">
-                                            {% if pregunta.activa %}🔓 Desactivar{% else %}🔒 Activar{% endif %}
-                                        </button>
-                                        <button class="btn btn-small btn-danger" onclick="eliminarPregunta({{ pregunta.id }})">🗑️</button>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5">No hay preguntas creadas. ¡Crea una!</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Orden</th>
+                                <th>Pregunta</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-preguntas">
+                            {% for pregunta in preguntas %}
+                            <tr id="pregunta-row-{{ pregunta.id }}">
+                                <td>{{ pregunta.orden }}</td>
+                                <td>{{ pregunta.texto }}</td>
+                                <td>{% if pregunta.tipo == 'estrella' %}⭐ Estrellas{% else %}📋 Selección{% endif %}</td>
+                                <td class="{% if pregunta.activa %}estado-activo{% else %}estado-inactivo{% endif %}">
+                                    {% if pregunta.activa %}Activa{% else %}Inactiva{% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-small btn-warning" onclick="editarPregunta({{ pregunta.id }})">✏️</button>
+                                    <button class="btn btn-small btn-success" onclick="toggleActiva({{ pregunta.id }}, {{ pregunta.activa|lower }})">
+                                        {% if pregunta.activa %}🔓 Desactivar{% else %}🔒 Activar{% endif %}
+                                    </button>
+                                    <button class="btn btn-small btn-danger" onclick="eliminarPregunta({{ pregunta.id }})">🗑️</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No hay preguntas creadas. ¡Crea una!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -736,7 +228,7 @@
         </div>
     </div>
     
-    <!-- Modales (igual que antes) -->
+    <!-- Modales -->
     <div id="modalPregunta" class="modal">
         <div class="modal-content">
             <h2 id="modalPreguntaTitulo">Nueva Pregunta</h2>
@@ -759,7 +251,7 @@
                     <input type="checkbox" id="preguntaActiva" checked>
                     <label>¿Pregunta activa?</label>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="modal-actions">
                     <button type="submit" class="btn btn-primary">Guardar</button>
                     <button type="button" class="btn" onclick="cerrarModalPregunta()" style="background:#ccc;">Cancelar</button>
                 </div>
@@ -774,7 +266,7 @@
             <form id="formQR">
                 <label>Nombre del QR (ej: Mesa 1, Promoción, Publicidad)</label>
                 <input type="text" id="qrNombre" required placeholder="Ej: Mesa 1" autocomplete="off">
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="modal-actions">
                     <button type="submit" class="btn btn-primary" id="btnGenerarQR">Generar QR</button>
                     <button type="button" class="btn" onclick="cerrarModalQR()" style="background:#ccc;">Cancelar</button>
                 </div>
@@ -783,275 +275,61 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <!-- DATOS PARA GRÁFICOS -->
     <script>
-        // ==================== MENÚ HAMBURGUESA ====================
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        // Pasar datos de respuestas por día desde Django
+        window.fechasData = [
+            {% for item in respuestas_por_dia %}
+            { fecha: "{{ item.fecha }}", total: {{ item.total }} },
+            {% endfor %}
+        ];
         
-        function openMenu() {
-            sidebar.classList.add('open');
-            sidebarOverlay.classList.add('active');
-        }
+        // Pasar datos de estadísticas de preguntas desde Django
+        window.preguntasStatsData = [
+            {% for stat in stats_preguntas %}
+            {
+                tipo: "{{ stat.tipo }}",
+                distribucion: {
+                    {% if stat.tipo == 'estrella' %}
+                    "1": {{ stat.distribucion.1|default:0 }},
+                    "2": {{ stat.distribucion.2|default:0 }},
+                    "3": {{ stat.distribucion.3|default:0 }},
+                    "4": {{ stat.distribucion.4|default:0 }},
+                    "5": {{ stat.distribucion.5|default:0 }}
+                    {% else %}
+                    {% for opcion, count in stat.distribucion.items %}
+                        "{{ opcion|escapejs }}": {{ count }},
+                    {% endfor %}
+                    {% endif %}
+                },
+                total: {{ stat.total_respuestas }},
+                promedio: "{{ stat.promedio|default:0 }}"
+            },
+            {% endfor %}
+        ];
         
-        function closeMenu() {
-            sidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('active');
-        }
-        
-        menuToggle.addEventListener('click', openMenu);
-        sidebarOverlay.addEventListener('click', closeMenu);
-        
-        // Cerrar menú al seleccionar una opción (en móvil)
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                if (window.innerWidth <= 768) {
-                    closeMenu();
-                }
-            });
-        });
-        
-        // Guardar sección activa
-        function guardarSeccionActiva(seccion) {
-            localStorage.setItem('seccionActiva', seccion);
-        }
-        
-        function restaurarSeccionActiva() {
-            const seccionGuardada = localStorage.getItem('seccionActiva');
-            if (seccionGuardada && seccionGuardada !== 'dashboard') {
-                const navItem = document.querySelector(`.nav-item[data-seccion="${seccionGuardada}"]`);
-                if (navItem) {
-                    navItem.click();
-                }
+        console.log('Fechas Data:', window.fechasData);
+        console.log('Preguntas Stats Data:', window.preguntasStatsData);
+    </script>
+    
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    
+    <!-- Inicializar QR Codes -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for qr in codigos_qr %}
+            try {
+                new QRCode(document.getElementById("qr-{{ qr.id }}"), {
+                    text: "https://chiwu.mx{% url 'encuesta_qr' qr.codigo %}",
+                    width: 120,
+                    height: 120
+                });
+            } catch(e) {
+                console.error('Error al generar QR:', e);
             }
-        }
-        
-        // Variables globales
-        let trendChart = null;
-        let preguntaCharts = {};
-        
-        function getCookie(name) {
-            let value = "; " + document.cookie;
-            let parts = value.split("; " + name + "=");
-            if (parts.length === 2) return parts.pop().split(";").shift();
-        }
-        
-        // Filtros
-        function aplicarFiltros() {
-            const fechaDesde = document.getElementById('fecha_desde').value;
-            const fechaHasta = document.getElementById('fecha_hasta').value;
-            fetch(`/estadisticas-filtradas/?desde=${fechaDesde}&hasta=${fechaHasta}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('total_respuestas').textContent = data.total_respuestas;
-                        document.getElementById('respuestas_periodo').textContent = data.respuestas_periodo;
-                        document.getElementById('promedio_general').textContent = data.promedio_general + '/5';
-                        if (trendChart) {
-                            trendChart.data.labels = data.fechas;
-                            trendChart.data.datasets[0].data = data.totales;
-                            trendChart.update();
-                        }
-                        for (let i = 0; i < data.preguntas_stats.length; i++) {
-                            const stat = data.preguntas_stats[i];
-                            if (preguntaCharts[i]) {
-                                preguntaCharts[i].data.datasets[0].data = stat.distribucion;
-                                preguntaCharts[i].update();
-                            }
-                        }
-                    }
-                });
-        }
-        
-        function limpiarFiltros() {
-            document.getElementById('fecha_desde').value = '';
-            document.getElementById('fecha_hasta').value = '';
-            aplicarFiltros();
-        }
-        
-        // Navegación
-        document.querySelectorAll('.nav-item[data-seccion]').forEach(item => {
-            item.addEventListener('click', () => {
-                const seccion = item.dataset.seccion;
-                document.querySelectorAll('.nav-item[data-seccion]').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                document.querySelectorAll('.seccion').forEach(sec => sec.classList.remove('active'));
-                document.getElementById(`seccion-${seccion}`).classList.add('active');
-                document.getElementById('titulo-seccion').textContent = {
-                    'dashboard': 'Dashboard de Satisfacción',
-                    'preguntas': 'Gestión de Preguntas',
-                    'qr': 'Códigos QR'
-                }[seccion];
-                guardarSeccionActiva(seccion);
-            });
+            {% endfor %}
         });
-        
-        // Gráficos iniciales
-        const fechas = {{ respuestas_por_dia|safe }};
-        const labels = fechas.map(d => d.fecha);
-        const totals = fechas.map(d => d.total);
-        
-        trendChart = new Chart(document.getElementById('trendChart'), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Respuestas por día',
-                    data: totals,
-                    borderColor: '#ff6b00',
-                    backgroundColor: 'rgba(255,107,0,0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: true }
-        });
-        
-        {% for stat in stats_preguntas %}
-        preguntaCharts[{{ forloop.counter0 }}] = new Chart(document.getElementById('chart_{{ forloop.counter }}'), {
-            type: 'bar',
-            data: {
-                labels: ['1★', '2★', '3★', '4★', '5★'],
-                datasets: [{
-                    label: 'Cantidad de respuestas',
-                    data: [{{ stat.distribucion.1 }}, {{ stat.distribucion.2 }}, {{ stat.distribucion.3 }}, {{ stat.distribucion.4 }}, {{ stat.distribucion.5 }}],
-                    backgroundColor: '#ff6b00',
-                    borderRadius: 10
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: true }
-        });
-        {% endfor %}
-        
-        // QR
-        {% for qr in codigos_qr %}
-        new QRCode(document.getElementById("qr-{{ qr.id }}"), {
-            text: "https://chiwu.mx{% url 'encuesta_qr' qr.codigo %}",
-            width: 120,
-            height: 120
-        });
-        {% endfor %}
-        
-        // Gestión de preguntas
-        document.getElementById('preguntaTipo').addEventListener('change', function() {
-            document.getElementById('opcionesContainer').style.display = this.value === 'seleccion' ? 'block' : 'none';
-        });
-        
-        function abrirModalPregunta() {
-            document.getElementById('modalPreguntaTitulo').textContent = 'Nueva Pregunta';
-            document.getElementById('preguntaId').value = '';
-            document.getElementById('preguntaTexto').value = '';
-            document.getElementById('preguntaTipo').value = 'estrella';
-            document.getElementById('preguntaOpciones').value = '';
-            document.getElementById('preguntaOrden').value = '0';
-            document.getElementById('preguntaActiva').checked = true;
-            document.getElementById('opcionesContainer').style.display = 'none';
-            document.getElementById('modalPregunta').style.display = 'flex';
-        }
-        
-        function cerrarModalPregunta() {
-            document.getElementById('modalPregunta').style.display = 'none';
-        }
-        
-        function editarPregunta(id) {
-            fetch(`/pregunta/${id}/datos/`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('modalPreguntaTitulo').textContent = 'Editar Pregunta';
-                    document.getElementById('preguntaId').value = data.id;
-                    document.getElementById('preguntaTexto').value = data.texto;
-                    document.getElementById('preguntaTipo').value = data.tipo || 'estrella';
-                    document.getElementById('preguntaOpciones').value = data.opciones || '';
-                    document.getElementById('preguntaOrden').value = data.orden;
-                    document.getElementById('preguntaActiva').checked = data.activa;
-                    document.getElementById('opcionesContainer').style.display = data.tipo === 'seleccion' ? 'block' : 'none';
-                    document.getElementById('modalPregunta').style.display = 'flex';
-                });
-        }
-        
-        function eliminarPregunta(id) {
-            if (!confirm('¿Eliminar esta pregunta permanentemente?')) return;
-            fetch(`/pregunta/${id}/eliminar/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            }).then(res => res.json()).then(data => { if (data.success) location.reload(); });
-        }
-        
-        document.getElementById('formPregunta').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('preguntaId').value;
-            const texto = document.getElementById('preguntaTexto').value.trim();
-            const tipo = document.getElementById('preguntaTipo').value;
-            const opciones = document.getElementById('preguntaOpciones').value;
-            const orden = document.getElementById('preguntaOrden').value;
-            const activa = document.getElementById('preguntaActiva').checked;
-            if (!texto) return alert('Escribe el texto de la pregunta');
-            if (tipo === 'seleccion' && !opciones.trim()) return alert('Agrega al menos una opción');
-            const formData = new FormData();
-            formData.append('texto', texto);
-            formData.append('tipo', tipo);
-            formData.append('opciones', opciones);
-            formData.append('orden', orden);
-            formData.append('activa', activa);
-            const url = id ? `/pregunta/${id}/editar/` : '/pregunta/crear/';
-            const res = await fetch(url, { method: 'POST', body: formData, headers: { 'X-CSRFToken': getCookie('csrftoken') } });
-            const data = await res.json();
-            if (data.success) location.reload();
-            else alert('Error: ' + (data.error || 'No se pudo guardar'));
-        };
-        
-        function toggleActiva(id, activaActual) {
-            fetch(`/pregunta/${id}/toggle-activa/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
-                body: `activa=${!activaActual}`
-            }).then(res => res.json()).then(data => { if (data.success) location.reload(); });
-        }
-        
-        // QR
-        function abrirModalQR() {
-            document.getElementById('modalQR').style.display = 'flex';
-            document.getElementById('qrNombre').value = '';
-        }
-        
-        function cerrarModalQR() {
-            document.getElementById('modalQR').style.display = 'none';
-        }
-        
-        document.getElementById('formQR').onsubmit = async (e) => {
-            e.preventDefault();
-            const nombre = document.getElementById('qrNombre').value.trim();
-            if (!nombre) return alert('Escribe un nombre para el QR');
-            const btn = document.getElementById('btnGenerarQR');
-            btn.disabled = true;
-            btn.textContent = 'Generando...';
-            const formData = new FormData();
-            formData.append('nombre', nombre);
-            try {
-                const res = await fetch('/generar-qr/', { method: 'POST', body: formData, headers: { 'X-CSRFToken': getCookie('csrftoken') } });
-                const data = await res.json();
-                if (data.success) location.reload();
-                else alert('Error: ' + (data.error || 'No se pudo generar el QR'));
-            } catch (error) { alert('Error de conexión'); }
-            finally { btn.disabled = false; btn.textContent = 'Generar QR'; }
-        };
-        
-        async function eliminarQR(id) {
-            if (!confirm('¿Eliminar este código QR?')) return;
-            try {
-                const res = await fetch(`/eliminar-qr/${id}/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
-                const data = await res.json();
-                if (data.success) location.reload();
-                else alert('Error al eliminar');
-            } catch (error) { alert('Error de conexión'); }
-        }
-        
-        window.onclick = (e) => {
-            if (e.target === document.getElementById('modalPregunta')) cerrarModalPregunta();
-            if (e.target === document.getElementById('modalQR')) cerrarModalQR();
-        };
-        
-        restaurarSeccionActiva();
     </script>
 </body>
 </html>
